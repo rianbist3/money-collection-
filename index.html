@@ -321,6 +321,7 @@
   const todayGrandTotalEl = document.getElementById('ct-today-grand-total');
 
   const STORE_KEY = 'members-v1';
+  const MAX_MEMBERS = 1500;
   let members = [];
   let expandedId = null;
 
@@ -519,11 +520,32 @@
     render();
   }
 
+  const HISTORY_KEEP_DAYS = 400; // keep ~13 months of daily entries per member
+
+  function trimOldHistory(){
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - HISTORY_KEEP_DAYS);
+    const cutoffStr = cutoff.getFullYear()+'-'+String(cutoff.getMonth()+1).padStart(2,'0')+'-'+String(cutoff.getDate()).padStart(2,'0');
+    members.forEach(m=>{
+      if(m.history) m.history = m.history.filter(h=>h.date >= cutoffStr);
+      if(m.loanHistory) m.loanHistory = m.loanHistory.filter(h=>h.date >= cutoffStr);
+    });
+  }
+
   function persist(){
     try{
       localStorage.setItem(STORE_KEY, JSON.stringify(members));
     }catch(e){
-      toast('सेभ गर्न सकिएन, फेरि प्रयास गर्नुहोस्');
+      // Likely storage quota exceeded (common once history piles up over
+      // many months at high member counts) — trim old entries and retry
+      // once before giving up.
+      try{
+        trimOldHistory();
+        localStorage.setItem(STORE_KEY, JSON.stringify(members));
+        toast('पुरानो डाटा हटाइयो, सेभ भयो');
+      }catch(e2){
+        toast('सेभ गर्न सकिएन — फोनको स्टोरेज भरियो, ठाउँ खाली गर्नुहोस्');
+      }
     }
   }
 
@@ -756,6 +778,10 @@
         if(isEdit){
           existing.name=name; existing.account=account; existing.savings=savings; existing.loan=loan;
         }else{
+          if(members.length >= MAX_MEMBERS){
+            toast('अधिकतम '+MAX_MEMBERS+' सदस्य क्षमता पुगियो');
+            return;
+          }
           members.push({id:uid(), name, account, savings, loan, history:[], loanHistory:[]});
         }
         persist();
