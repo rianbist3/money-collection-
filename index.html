@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>दैनिक असुली — सदस्य खाता</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#FAF7F0;
+    --ink:#1F2A24;
+    --ink-soft:#5B6B60;
+    --green:#1B4332;
+    --green-soft:#E7EFE9;
+    --gold:#C9973E;
+    --gold-soft:#F6EAD2;
+    --red:#A6432D;
+    --red-soft:#F5E4DE;
+    --line:#E1DACB;
+    --card:#FFFFFF;
+    --radius:14px;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{margin:0;}
+
+  #ct-root{
+    font-family:'Noto Sans Devanagari','Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    padding:18px 14px 60px;
+    max-width:520px;
+    margin:0 auto;
+  }
+
+  .ct-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:14px;
+    padding-bottom:12px;
+    border-bottom:2px solid var(--green);
+  }
+  .ct-header h1{
+    font-size:20px;
+    font-weight:700;
+    color:var(--green);
+    margin:0;
+  }
+  .ct-header-right{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:6px;
+  }
+  .ct-refresh-corner{
+    border:1px solid var(--red);
+    background:var(--red-soft);
+    color:var(--red);
+    font-size:11px;
+    font-weight:600;
+    font-family:inherit;
+    padding:5px 10px;
+    border-radius:20px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .ct-refresh-corner:active{opacity:0.85;}
+
+  .ct-summary{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .ct-summary-card{
+    flex:1 1 30%;
+    min-width:104px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:10px 12px;
+  }
+  .ct-summary-card .label{font-size:11px;color:var(--ink-soft);}
+  .ct-summary-card .value{font-size:16px;font-weight:700;color:var(--green);margin-top:2px;}
+  .ct-summary-card.gold .value{color:#9C7526;}
+
+  .ct-search{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:14px;
+    margin-bottom:12px;
+    font-family:inherit;
+    color:var(--ink);
+  }
+  .ct-search:focus{outline:2px solid var(--green);outline-offset:1px;}
+
+  .ct-add-btn{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:var(--green);
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    margin-bottom:16px;
+  }
+  .ct-add-btn:active{opacity:0.85;}
+
+  .ct-empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+    background:var(--card);
+    border-radius:var(--radius);
+    border:1px dashed var(--line);
+  }
+
+  .ct-member{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .ct-member-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    cursor:pointer;
+  }
+  .ct-member-name{font-size:15px;font-weight:600;}
+  .ct-member-acc{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .ct-member-total{text-align:right;}
+  .ct-member-total .amt{font-size:15px;font-weight:700;color:var(--green);}
+  .ct-member-total .lbl{font-size:10px;color:var(--ink-soft);}
+
+  .ct-member-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px 12px;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+  }
+  .ct-member-grid .g-lbl{color:var(--ink-soft);}
+  .ct-member-grid .g-val{font-weight:600;text-align:right;}
+  .ct-member-grid .g-val.loan{color:var(--red);}
+
+  .ct-member-actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .ct-btn{
+    flex:1;
+    padding:9px;
+    border-radius:8px;
+    border:none;
+    font-size:12px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .ct-btn.collect{background:var(--green);color:#fff;}
+  .ct-btn.loan{background:var(--red-soft);color:var(--red);}
+  .ct-btn.edit{background:var(--green-soft);color:var(--green);}
+  .ct-btn.del{background:transparent;color:var(--ink-soft);border:1px solid var(--line);flex:0 0 auto;padding:9px 12px;}
+
+  .ct-modal-backdrop{
+    position:fixed;inset:0;background:rgba(20,25,20,0.45);
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  .ct-modal{
+    background:var(--card);
+    width:100%;max-width:520px;
+    border-radius:18px 18px 0 0;
+    padding:20px 18px 26px;
+  }
+  .ct-modal h2{font-size:16px;margin:0 0 14px;color:var(--green);}
+  .ct-field{margin-bottom:12px;}
+  .ct-field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:4px;}
+  .ct-field input{
+    width:100%;padding:10px 12px;border-radius:8px;
+    border:1px solid var(--line);font-size:14px;font-family:inherit;
+    color:var(--ink);
+  }
+  .ct-field input:focus{outline:2px solid var(--green);outline-offset:1px;}
+  .ct-modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .ct-modal-actions button{flex:1;padding:11px;border-radius:8px;border:none;font-weight:600;font-family:inherit;font-size:14px;cursor:pointer;}
+  .ct-modal-actions .cancel{background:var(--bg);color:var(--ink-soft);border:1px solid var(--line);}
+  .ct-modal-actions .save{background:var(--green);color:#fff;}
+
+  .ct-view-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .ct-view-toggle button{
+    flex:1;
+    padding:9px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink-soft);
+    font-size:12px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .ct-view-toggle button.active{
+    background:var(--green);
+    color:#fff;
+    border-color:var(--green);
+  }
+
+  .ct-table-wrap{
+    overflow-x:auto;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    -webkit-overflow-scrolling:touch;
+  }
+  table.ct-table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:620px;
+    font-size:12px;
+  }
+  table.ct-table th, table.ct-table td{
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    white-space:nowrap;
+  }
+  table.ct-table th{
+    background:var(--green-soft);
+    color:var(--green);
+    font-weight:700;
+    position:sticky;
+    top:0;
+  }
+  table.ct-table td.num{ text-align:right; }
+  table.ct-table td.sn{ color:var(--ink-soft); }
+  table.ct-table td.loan{ color:var(--red); }
+  table.ct-table td.total{ font-weight:700; color:var(--green); }
+  table.ct-table tr:last-child td{ border-bottom:none; }
+
+  .acc-gs{ color:var(--green); font-weight:700; }
+  .acc-ps{ color:var(--red); font-weight:700; }
+
+  .ct-toast{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;
+    font-size:13px;z-index:60;
+  }
+</style>
+</head>
+<body>
+<div id="ct-root">
+  <div class="ct-header">
+    <h1>दैनिक असुली — सदस्य खाता</h1>
+    <div class="ct-header-right">
+      <button class="ct-refresh-corner" id="ct-reset-btn">रिफ्रेस</button>
+    </div>
+  </div>
+
+  <div class="ct-summary">
+    <div class="ct-summary-card">
+      <div class="label">आजको बचत संकलन</div>
+      <div class="value" id="ct-today-savings">रु ०</div>
+    </div>
+    <div class="ct-summary-card">
+      <div class="label">आजको ऋण संकलन</div>
+      <div class="value" id="ct-today-loan">रु ०</div>
+    </div>
+    <div class="ct-summary-card gold">
+      <div class="label">आजको कुल संकलन रकम</div>
+      <div class="value" id="ct-today-grand-total">रु ०</div>
+    </div>
+  </div>
+
+  <input class="ct-search" id="ct-search" placeholder="नाम वा खाता नं. खोज्नुहोस्..." />
+
+  <button class="ct-add-btn" id="ct-download-btn" style="background:var(--gold);color:#fff;">⬇ आजको डाटा डाउनलोड गर्नुहोस् (CSV)</button>
+
+  <button class="ct-add-btn" id="ct-add-member-btn">+ नयाँ सदस्य थप्नुहोस्</button>
+
+  <div class="ct-view-toggle">
+    <button id="ct-view-cards" class="active">कार्ड सूची</button>
+    <button id="ct-view-table">तालिका (फारम जस्तै)</button>
+  </div>
+
+  <div id="ct-list"></div>
+  <div id="ct-table-container" style="display:none;"></div>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('ct-root');
+  const listEl = document.getElementById('ct-list');
+  const tableContainerEl = document.getElementById('ct-table-container');
+  const viewCardsBtn = document.getElementById('ct-view-cards');
+  const viewTableBtn = document.getElementById('ct-view-table');
+  let viewMode = 'cards';
+  const searchEl = document.getElementById('ct-search');
+  const todaySavingsEl = document.getElementById('ct-today-savings');
+  const todayLoanEl = document.getElementById('ct-today-loan');
+  const todayGrandTotalEl = document.getElementById('ct-today-grand-total');
+
+  const STORE_KEY = 'members-v1';
+  let members = [];
+  let expandedId = null;
+
+  // सदस्य सूची - थ्री स्टार बहुउदेश्यीय सहकारी संस्था फारमबाट
+  const DEFAULT_MEMBERS = [
+    ['निशा तामाङ','GS-00022'],['निशा तामाङ','PS-00023'],
+    ['कामी सिंह घिसिङ','GS-00024'],
+    ['सिलु कुमारी तामाङ','GS-00090'],['सिलु कुमारी तामाङ','PS-00065'],
+    ['अल्का पोखरेल','GS-00218'],
+    ['रिमा थापा','GS-00028'],
+    ['एशिल बराल','PS-00010'],
+    ['राजेन्द्र खत्री','GS-00032'],['राजेन्द्र खत्री','PS-00038'],
+    ['सिता तामाङ','GS-00238'],
+    ['इन्दीरा लिम्बु','GS-00039'],['इन्दीरा लिम्बु','PS-00006'],
+    ['शिव शर्मा','GS-00075'],
+    ['राम देवी विसुराल','GS-00041'],['राम देवी विसुराल','PS-00002'],
+    ['निर बहादुर गाहा मगर','GS-00044'],
+    ['पुजन ठाडा मगर','PS-00077'],
+    ['बि माया नेपाली','GS-00045'],['बि माया नेपाली','PS-00019'],
+    ['विमति थामी','GS-00051'],
+    ['बुढ बहादुर कुँवर','PS-00112'],
+    ['राजु गुरुङ','GS-00052'],['राजु गुरुङ','PS-00034'],
+    ['रचित गुरुङ','PS-00042'],
+    ['रोशिक गुरुङ','PS-00043'],
+    ['राजेश कुमार साह','GS-00056'],['राजेश कुमार साह','PS-00018'],
+    ['धग्रेन्द्र महतो नुनिया','GS-00061'],
+    ['शान्ता राई तामाङ','GS-00062'],['शान्ता राई तामाङ','PS-00017'],
+    ['निर्मला मावो','GS-00139'],
+    ['कुमार थापा','GS-00064'],
+    ['सरिता पण्डित थापा','PS-00045'],
+    ['राकेश कुमार','GS-00067'],['राकेश कुमार','PS-00021'],
+    ['सुरज कुमार','GS-00102'],['सुरज कुमार','PS-00022'],
+    ['दिलिप सुवेदी','GS-00106'],
+    ['चक पाणी शर्मा','GS-00107'],
+    ['दिपशिखा बिष्ट','GS-00112'],
+    ['नारायण घिमिरे','GS-00113'],
+    ['कुमारी तिवारी','PS-00039'],
+    ['पासाङ तामाङ','GS-00115'],
+    ['बिर्षिक तामाङ','GS-00114'],
+    ['निमा डाबा शेर्पा','GS-00152'],
+    ['लिला बहादुर रखाल','GS-00126'],['लिला बहादुर रखाल','PS-00099'],
+    ['सदिन श्रेष्ठ','GS-00130'],['सदिन श्रेष्ठ','PS-00024'],
+    ['सदिम श्रेष्ठ','GS-00293'],
+    ['अरुण कुमार दास','GS-00098'],['अरुण कुमार दास','PS-00014'],
+    ['इन्द्र कुमारी तामाङ','GS-00151'],
+    ['एस.एल राई','GS-00163'],['एस.एल राई','PS-00030'],
+    ['बिर बहादुर साऱु','GS-00132'],
+    ['श्री देवी साऱु','PS-00069'],
+    ['भवानी भुजेल','GS-00253'],
+    ['एन्जल भुजेल','PS-00032'],
+    ['सन भुजेल','GS-00209'],
+    ['सफल भुजेल','PS-00066'],
+    ['संगिता बोहरा','GS-00182'],
+    ['मन्जु देवि बिष्ट','GS-00183'],
+    ['लक्ष्मण थापा','GS-00185'],
+    ['कौशिला रम्तेल','GS-00186'],
+    ['पवित्रा रानाभाट','GS-00187'],
+    ['परिश्रमा राना मगर','CS-00008'],
+    ['तेज कुमारी लोहनी','GS-00188'],
+    ['बल कृष्ण खनाल','GS-00201'],
+    ['राधिका श्रेष्ठ','GS-00029'],['राधिका श्रेष्ठ','PS-00035'],
+    ['स्मिता श्रेष्ठ','GS-00239'],
+    ['माया भुजेल','GS-00049'],['माया भुजेल','PS-00059'],
+    ['प्रतिभा कार्की','PS-00075'],
+    ['धिरज जैसवाल','GS-00191'],['धिरज जैसवाल','PS-00040'],
+    ['मुस्लिम देवान फकिर','GS-00046'],
+    ['सुरज वि.क.','GS-00197'],
+    ['शान्ति खाती','PS-00049'],
+    ['गोविन्द बस्ती','GS-00198'],
+    ['सुनिता लामा','GS-00193'],
+    ['शान्ति देवि वि.क','GS-00200'],['शान्ति देवि वि.क','PS-00084'],
+    ['अनिता बिष्ट','GS-00128'],
+    ['अस्मिता धामी','GS-00203'],['अस्मिता धामी','PS-00083'],
+    ['जितेन्द्र साह','GS-00208'],['जितेन्द्र साह','PS-00096'],
+    ['माया कुमारी मगर','GS-00213'],['माया कुमारी मगर','PS-00061'],
+    ['साईमन मगर','GS-00262'],
+    ['सृजल थापा','GS-00025'],
+    ['ज्ञानु लामा','GS-00219'],['ज्ञानु लामा','PS-00098'],
+    ['शुसिला नेपाल','GS-00230'],['शुसिला नेपाल','PS-00072'],
+    ['लक्ष्मी पाण्डे','GS-00232'],
+    ['शान्तिला आले','GS-00235'],['शान्तिला आले','PS-00074'],
+    ['करुणाकर जोशी','GS-00234'],
+    ['प्रियंका बिष्ट','GS-00184'],['प्रियंका बिष्ट','PS-00076'],
+    ['पार्वती महतो','GS-00241'],['पार्वती महतो','PS-00080'],
+    ['निरज फा','GS-00160'],
+    ['विष्णु श्रेष्ठ','GS-00248'],
+    ['ठाकुर प्रसाद दाहाल','GS-00243'],
+    ['सिताबी ठाकुर हजाम','GS-00242'],
+    ['भुपाल कार्की','GS-00250'],
+    ['यसोदा कटुवाल','GS-00249'],['यसोदा कटुवाल','PS-00086'],
+    ['डेविड कार्की','CS-00005'],
+    ['डेनिश कार्की','CS-00006'],
+    ['लक्ष्मी दर्जी परियार','GS-00270'],
+    ['ओम शान्ति ज्वेलर्स','GS-00278'],
+    ['उर्मिला श्रेष्ठ','GS-00279'],
+    ['मुना विश्वकर्मा','GS-00280'],
+    ['बिना रावल','GS-00282'],['बिना रावल','PS-00091'],
+    ['हरि बहादुर लामिछाने','GS-00284'],['हरि बहादुर लामिछाने','PS-00092'],
+    ['आयुष लामिछाने','GS-00362'],
+    ['राशिना कायस्थ','GS-00287'],
+    ['महिमा श्रेष्ठ','CS-000010'],
+    ['जुना वि.क.','GS-00109'],
+    ['आराध्या जयसवाल','CS-00007'],
+    ['रोशन जयसवाल','GS-00383'],
+    ['विमला नेपाल','GS-00300'],
+    ['सुहानि कुताल','GS-00104'],
+    ['सविना बराल घिमिरे','GS-00316'],['सविना बराल घिमिरे','PS-00097'],
+    ['हिमला गुरुङ','GS-00334'],['हिमला गुरुङ','PS-00100'],
+    ['अरुण बलाल मगर','GS-00329'],
+    ['शान्ता तामाङ','PS-00117'],
+    ['हिमनाथ देबकोटा','PS-00121'],
+    ['सर्मिला गुरुङ','GS-003'],
+    ['बलराम थापा','GS-00377'],
+    ['टिका राम ढकाल','GS-00017'],
+    ['कमला कुमारी शाही','GS-00031'],
+    ['दिलिप रिजाल','GS-00038'],
+    ['सन्तोष सुवेदी','GS-00089'],
+    ['बिप्लभ जङ्ग भेटवाल','GS-00048'],
+    ['ज्ञान कुमारी सुनार','GS-00173'],
+    ['दिनेश शर्मा','GS-00063'],
+    ['नारायण बहादुर थापा','GS-00033'],
+    ['रावाण खत्री','GS-00069'],
+    ['मिना श्रेष्ठ','GS-00050'],['मिना श्रेष्ठ','PS-00008'],
+    ['धुव बहादुर मगर','GS-00134'],['धुव बहादुर मगर','PS-00081'],
+    ['बाल कुमारी ठकुरी','GS-00138'],
+    ['दिपसेन ठकुरी','PS-00064'],
+    ['रबिना घर्ती मगर','GS-00150'],['रबिना घर्ती मगर','PS-00050'],
+    ['अप्सरा घर्तीमगर','PS-00057'],
+    ['सुर्य पुनमगर','GS-00251'],['सुर्य पुनमगर','PS-00082'],
+    ['प्रेम कुमार पुन','GS-00196'],['प्रेम कुमार पुन','PS-00058'],
+    ['समिक्षा बाँठा','GS-00312'],
+    ['दिलिप सिंह गुरुङ','GS-00153'],
+    ['रण सिंह गुरुङ','GS-00095'],
+    ['ब्रमा शंकर चौधरी','GS-00164'],['ब्रमा शंकर चौधरी','PS-00053'],
+    ['प्रज्वल राज चौधरी','PS-00056'],
+    ['शिव लाल शर्मा','GS-00072'],['शिव लाल शर्मा','PS-00013'],
+    ['उमेश ठाकुर','GS-00181'],
+    ['सपना परियार','GS-00244'],
+    ['कन्चन कुमारी शाह','GS-00037'],
+    ['रोनभ आले मगर','PS-00007'],
+    ['प्रनिशा अधिकारी','GS-00231'],
+    ['मो. रहमतुल्लाह','GS-00081'],['मो. रहमतुल्लाह','PS-00087'],
+    ['मो. सब्बीर आलम','GS-00363'],
+    ['गम माया छन्त्याल','GS-00320'],
+    ['राम माया वि.क.','GS-00254'],
+    ['नवराज बर्देवा दर्जी','GS-00216'],
+    ['अमर बहादुर वि.क.','GS-00269'],
+    ['माया वि.क.','PS-00088'],
+    ['संगम वि.क.','PS-00089'],
+    ['मीना श्रेष्ठ','GS-00260'],
+    ['सन्त तामाङ','GS-00285'],
+    ['अनिता श्रेष्ठ','GS-00286'],
+    ['आर.डि.सी. बुइल्ड टेक','GS-00304'],
+    ['कृतिका थापा मगर','PS-00123'],
+    ['कमला थापा','GS-00311'],
+    ['घिष्मा थापा','CS-00009'],
+    ['सपना आले','GS-00317'],
+    ['लिला घले मगर','GS-00391'],
+    ['लिजा घले','GS-00393'],
+    ['लिजन घले','CS-000012'],
+    ['श्रीधर पाण्डे','GS-00229'],
+    ['रेनुका तामाङ','GS-00236'],
+    ['होम बहादुर राय क्षेत्री','GS-00330'],
+    ['सर्मिला तामाङ','GS-00331'],
+    ['गंगा मानन्धर','GS-00332'],
+    ['प्रेम कुमार श्रेष्ठ','GS-00276'],
+    ['धन बहादुर साऱु मगर','GS-00373'],
+    ['दिव्या साऱु मगर','GS-00376'],
+    ['सुजता भुजेल','GS-00407'],
+    ['अन्जु मगर','GS-00412'],
+    ['अमर राणा मगर','PS-00129']
+  ];
+
+  const todayStr = () => {
+    const d = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  };
+  const fmt = n => 'रु ' + Number(n||0).toLocaleString('en-IN');
+
+  function uid(){ return 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+  function loadLocal(){
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      members = raw ? JSON.parse(raw) : [];
+    }catch(e){
+      members = [];
+    }
+    if(members.length===0){
+      members = DEFAULT_MEMBERS.map(([name,account])=>({
+        id:uid(), name, account, savings:0, loan:0, history:[], loanHistory:[]
+      }));
+      persist();
+    }
+    render();
+  }
+
+  function persist(){
+    try{
+      localStorage.setItem(STORE_KEY, JSON.stringify(members));
+    }catch(e){
+      toast('सेभ गर्न सकिएन, फेरि प्रयास गर्नुहोस्');
+    }
+  }
+
+  function toast(msg){
+    const t = document.createElement('div');
+    t.className = 'ct-toast';
+    t.textContent = msg;
+    root.appendChild(t);
+    setTimeout(()=>t.remove(), 1800);
+  }
+
+  function total(m){ return Number(m.savings||0) + Number(m.loan||0); }
+
+  function collectedToday(m){
+    return (m.history||[]).filter(h=>h.date===todayStr()).reduce((s,h)=>s+h.amount,0);
+  }
+
+  function loanGivenToday(m){
+    return (m.loanHistory||[]).filter(h=>h.date===todayStr()).reduce((s,h)=>s+h.amount,0);
+  }
+
+  function downloadTodayCSV(){
+    const rows = [['क.सं.','सदस्यको नाम','खाता नं.','बचत रकम (आज)','ऋण (आज)','जम्मा रकम (आज)']];
+    let totalSav = 0, totalLoan = 0;
+    members.forEach((m,i)=>{
+      const sav = collectedToday(m);
+      const ln = loanGivenToday(m);
+      if(sav>0 || ln>0){
+        rows.push([i+1, m.name, m.account||'-', sav, ln, sav+ln]);
+        totalSav += sav; totalLoan += ln;
+      }
+    });
+    if(rows.length===1){
+      toast('आज कुनै संकलन भएको छैन');
+      return;
+    }
+    rows.push(['','','जम्मा', totalSav, totalLoan, totalSav+totalLoan]);
+
+    const csvContent = rows.map(r => r.map(cell => {
+      const s = String(cell);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }).join(',')).join('\r\n');
+
+    const filename = 'daily-collection-' + todayStr() + '.csv';
+    const csvWithBom = '\uFEFF' + csvContent;
+
+    try{
+      // Older Edge/IE
+      if(navigator.msSaveOrOpenBlob){
+        const blob = new Blob([csvWithBom], {type:'text/csv;charset=utf-8;'});
+        navigator.msSaveOrOpenBlob(blob, filename);
+        toast('डाटा डाउनलोड भयो');
+        return;
+      }
+
+      const blob = new Blob([csvWithBom], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Revoke after a short delay so the browser has time to start the
+      // download before the blob URL is freed (fixes empty/failed downloads
+      // on some mobile browsers).
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      toast('डाटा डाउनलोड भयो');
+    }catch(err){
+      // Fallback for browsers/in-app webviews that block the blob+download
+      // trick entirely (e.g. some mobile in-app browsers): open the CSV as
+      // a data URI in a new tab so the user can save it manually.
+      try{
+        const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvWithBom);
+        const win = window.open(dataUri, '_blank');
+        if(!win){
+          toast('डाउनलोड ब्लक भयो — पप-अप अनुमति दिनुहोस्');
+        }else{
+          toast('नयाँ ट्याबमा खुल्यो, त्यहाँबाट सेभ गर्नुहोस्');
+        }
+      }catch(err2){
+        toast('डाउनलोड असफल भयो, फेरि प्रयास गर्नुहोस्');
+      }
+    }
+  }
+
+  function renderTableFiltered(list){
+    let rows = list.map((m,i)=>{
+      const savToday = collectedToday(m);
+      const loanToday = loanGivenToday(m);
+      return `
+      <tr>
+        <td class="sn">${i+1}.</td>
+        <td>${escapeHtml(m.name)}</td>
+        <td>${accountHtml(m.account)}</td>
+        <td class="num">${fmt(savToday)}</td>
+        <td class="num loan">${fmt(loanToday)}</td>
+        <td class="num total">${fmt(savToday + loanToday)}</td>
+      </tr>
+    `;
+    }).join('');
+
+    if(list.length===0){
+      tableContainerEl.innerHTML = '<div class="ct-empty">'+(members.length===0 ? 'अहिलेसम्म कुनै सदस्य थपिएको छैन।' : 'खोजी अनुसार कुनै सदस्य फेला परेन।')+'</div>';
+      return;
+    }
+
+    tableContainerEl.innerHTML = `
+      <div class="ct-table-wrap">
+        <table class="ct-table">
+          <thead>
+            <tr>
+              <th>क.सं.</th><th>सदस्यको नाम</th><th>खाता नं.</th>
+              <th>बचत रकम (आज)</th><th>ऋण (आज)</th><th>जम्मा रकम</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function setView(mode){
+    viewMode = mode;
+    viewCardsBtn.classList.toggle('active', mode==='cards');
+    viewTableBtn.classList.toggle('active', mode==='table');
+    listEl.style.display = mode==='cards' ? '' : 'none';
+    tableContainerEl.style.display = mode==='table' ? '' : 'none';
+    render();
+  }
+  viewCardsBtn.addEventListener('click', ()=>setView('cards'));
+  viewTableBtn.addEventListener('click', ()=>setView('table'));
+
+  function render(){
+    const q = searchEl.value.trim().toLowerCase();
+    const filtered = members.filter(m =>
+      m.name.toLowerCase().includes(q) || (m.account||'').toLowerCase().includes(q)
+    );
+
+    let todaySavingsSum = 0, todayLoanSum = 0;
+    members.forEach(m=>{ todaySavingsSum += collectedToday(m); todayLoanSum += loanGivenToday(m); });
+    todaySavingsEl.textContent = fmt(todaySavingsSum);
+    todayLoanEl.textContent = fmt(todayLoanSum);
+    todayGrandTotalEl.textContent = fmt(todaySavingsSum + todayLoanSum);
+
+    renderTableFiltered(filtered);
+
+    if(filtered.length===0){
+      listEl.innerHTML = '<div class="ct-empty">'+(members.length===0 ? 'अहिलेसम्म कुनै सदस्य थपिएको छैन। माथिको बटनबाट सदस्य थप्नुहोस्।' : 'खोजी अनुसार कुनै सदस्य फेला परेन।')+'</div>';
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(m=>{
+      const isOpen = expandedId===m.id;
+      return `
+        <div class="ct-member" data-id="${m.id}">
+          <div class="ct-member-top" data-toggle="${m.id}">
+            <div>
+              <div class="ct-member-name">${escapeHtml(m.name)}</div>
+              <div class="ct-member-acc">खाता नं. ${accountHtml(m.account)}</div>
+            </div>
+            <div class="ct-member-total">
+              <div class="amt">${fmt(total(m))}</div>
+              <div class="lbl">जम्मा रकम</div>
+            </div>
+          </div>
+          ${isOpen ? `
+          <div class="ct-member-grid">
+            <div class="g-lbl">बचत रकम</div><div class="g-val">${fmt(m.savings)}</div>
+            <div class="g-lbl">ऋण</div><div class="g-val loan">${fmt(m.loan)}</div>
+          </div>
+          <div class="ct-member-actions">
+            <button class="ct-btn collect" data-collect="${m.id}">बचत असुल</button>
+            <button class="ct-btn loan" data-loan="${m.id}">ऋण</button>
+          </div>
+          <div class="ct-member-actions">
+            <button class="ct-btn edit" data-edit="${m.id}">सम्पादन</button>
+            <button class="ct-btn del" data-del="${m.id}">मेट्नुहोस्</button>
+          </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function accountHtml(acc){
+    const s = escapeHtml(acc||'-');
+    if(/^GS/i.test(s)) return '<span class="acc-gs">'+s+'</span>';
+    if(/^PS/i.test(s)) return '<span class="acc-ps">'+s+'</span>';
+    return s;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---- modal helpers ----
+  function openModal(html, onMount){
+    const backdrop = document.createElement('div');
+    backdrop.className = 'ct-modal-backdrop';
+    backdrop.innerHTML = `<div class="ct-modal">${html}</div>`;
+    backdrop.addEventListener('click', e=>{ if(e.target===backdrop) backdrop.remove(); });
+    root.appendChild(backdrop);
+    onMount && onMount(backdrop);
+    return backdrop;
+  }
+
+  function memberFormModal(existing){
+    const isEdit = !!existing;
+    const backdrop = openModal(`
+      <h2>${isEdit ? 'सदस्य सम्पादन' : 'नयाँ सदस्य'}</h2>
+      <div class="ct-field"><label>सदस्यको नाम</label><input id="f-name" value="${isEdit?escapeHtml(existing.name):''}" /></div>
+      <div class="ct-field"><label>खाता नं.</label><input id="f-acc" value="${isEdit?escapeHtml(existing.account||''):''}" /></div>
+      <div class="ct-field"><label>सुरुको बचत रकम</label><input id="f-sav" type="number" inputmode="decimal" value="${isEdit?existing.savings:0}" /></div>
+      <div class="ct-field"><label>सुरुको ऋण</label><input id="f-loan" type="number" inputmode="decimal" value="${isEdit?existing.loan:0}" /></div>
+      <div class="ct-modal-actions">
+        <button class="cancel" id="f-cancel">रद्द</button>
+        <button class="save" id="f-save">${isEdit?'अपडेट गर्नुहोस्':'थप्नुहोस्'}</button>
+      </div>
+    `, backdrop=>{
+      backdrop.querySelector('#f-cancel').onclick = ()=>backdrop.remove();
+      backdrop.querySelector('#f-save').onclick = ()=>{
+        const name = backdrop.querySelector('#f-name').value.trim();
+        if(!name){ toast('नाम लेख्नुहोस्'); return; }
+        const account = backdrop.querySelector('#f-acc').value.trim();
+        const savings = Number(backdrop.querySelector('#f-sav').value)||0;
+        const loan = Number(backdrop.querySelector('#f-loan').value)||0;
+        if(isEdit){
+          existing.name=name; existing.account=account; existing.savings=savings; existing.loan=loan;
+        }else{
+          members.push({id:uid(), name, account, savings, loan, history:[], loanHistory:[]});
+        }
+        persist();
+        backdrop.remove();
+        render();
+      };
+    });
+  }
+
+  function amountModal(title, onConfirm){
+    const backdrop = openModal(`
+      <h2>${title}</h2>
+      <div class="ct-field"><label>रकम</label><input id="a-amt" type="number" inputmode="decimal" autofocus /></div>
+      <div class="ct-modal-actions">
+        <button class="cancel" id="a-cancel">रद्द</button>
+        <button class="save" id="a-save">पुष्टि गर्नुहोस्</button>
+      </div>
+    `, backdrop=>{
+      backdrop.querySelector('#a-cancel').onclick = ()=>backdrop.remove();
+      backdrop.querySelector('#a-save').onclick = ()=>{
+        const amt = Number(backdrop.querySelector('#a-amt').value);
+        if(!amt || amt<=0){ toast('मान्य रकम लेख्नुहोस्'); return; }
+        onConfirm(amt);
+        backdrop.remove();
+        render();
+      };
+    });
+  }
+
+  // ---- event delegation ----
+  document.getElementById('ct-add-member-btn').addEventListener('click', ()=>memberFormModal(null));
+  document.getElementById('ct-download-btn').addEventListener('click', downloadTodayCSV);
+  document.getElementById('ct-reset-btn').addEventListener('click', ()=>{
+    if(confirm('सबै सदस्यको बचत रकम र ऋण मेटाउने पक्का हो? यो फिर्ता हुँदैन।')){
+      members.forEach(m=>{
+        m.savings = 0;
+        m.loan = 0;
+        m.history = [];
+        m.loanHistory = [];
+      });
+      persist();
+      render();
+      toast('सबै बचत र ऋण मेटियो');
+    }
+  });
+  searchEl.addEventListener('input', render);
+
+  listEl.addEventListener('click', e=>{
+    const toggle = e.target.closest('[data-toggle]');
+    if(toggle){ expandedId = expandedId===toggle.dataset.toggle ? null : toggle.dataset.toggle; render(); return; }
+
+    const collect = e.target.closest('[data-collect]');
+    if(collect){
+      const m = members.find(x=>x.id===collect.dataset.collect);
+      amountModal('आज कति बचत असुल गर्नुभयो?', amt=>{
+        m.savings = Number(m.savings||0) + amt;
+        m.history = m.history||[];
+        m.history.push({date:todayStr(), amount:amt});
+        persist();
+        toast(m.name+'बाट '+fmt(amt)+' असुल भयो');
+      });
+      return;
+    }
+
+    const loan = e.target.closest('[data-loan]');
+    if(loan){
+      const m = members.find(x=>x.id===loan.dataset.loan);
+      amountModal('आज कति ऋण असुल गर्नुभयो?', amt=>{
+        m.loan = Number(m.loan||0) + amt;
+        m.loanHistory = m.loanHistory||[];
+        m.loanHistory.push({date:todayStr(), amount:amt});
+        persist();
+        toast(m.name+'बाट '+fmt(amt)+' ऋण असुल भयो');
+      });
+      return;
+    }
+
+    const edit = e.target.closest('[data-edit]');
+    if(edit){
+      const m = members.find(x=>x.id===edit.dataset.edit);
+      memberFormModal(m);
+      return;
+    }
+
+    const del = e.target.closest('[data-del]');
+    if(del){
+      if(confirm('यो सदस्य हटाउने पक्का हो?')){
+        members = members.filter(x=>x.id!==del.dataset.del);
+        persist();
+        render();
+      }
+      return;
+    }
+  });
+
+  loadLocal();
+})();
+</script>
+</body>
+</html>
